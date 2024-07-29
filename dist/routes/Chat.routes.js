@@ -1,0 +1,26 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const Chat_controller_1 = require("../controllers/Chat.controller");
+const Chat_service_1 = require("../services/Chat.service");
+const Message_1 = require("../models/Message");
+const ChatRoom_1 = __importDefault(require("../models/ChatRoom"));
+const User_model_1 = __importDefault(require("../models/User.model"));
+const Chat_repository_1 = require("../repositories/Chat.repository");
+const User_repository_1 = require("../repositories/User.repository");
+const authValidate_1 = require("../middlewares/authValidate");
+const validateParamObjectId_1 = require("../middlewares/validateParamObjectId");
+const validateBody_1 = require("../middlewares/validateBody");
+const chat_schema_1 = require("../utils/schema/chat.schema");
+const routerChat = (0, express_1.Router)();
+const chatRepository = new Chat_repository_1.ChatRepository(Message_1.Message, ChatRoom_1.default);
+const userRepository = new User_repository_1.UserRepository(User_model_1.default);
+const chatService = new Chat_service_1.ChatService(chatRepository, userRepository);
+const chatController = new Chat_controller_1.ChatController(chatService);
+routerChat.param("chatRoomId", (0, validateParamObjectId_1.middlewareParamsObjectId)("chatRoomId"));
+routerChat.post("/chat/create-message", authValidate_1.authValidatePassport, (0, validateBody_1.middlewareBody)(chat_schema_1.CreateMessageSchema), chatController.createMessage);
+routerChat.get("/chat/:chatRoomId", authValidate_1.authValidatePassport, chatController.findMessages);
+exports.default = routerChat;
