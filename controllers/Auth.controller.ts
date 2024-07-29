@@ -25,8 +25,9 @@ export class AuthController {
         throw new AuthenticationError("Failed to authenticate the user.");
       } else {
         res.cookie("jwt", result.token, {
-          httpOnly: true,
+          httpOnly: false,
           maxAge: 1000 * 60 * 60 * 24,
+          sameSite: "none" as SameSite,
           secure: true,
         });
         res.status(200).send({
