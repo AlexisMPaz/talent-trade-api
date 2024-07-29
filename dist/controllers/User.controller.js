@@ -30,9 +30,11 @@ class UserController {
             const { token } = req.params;
             try {
                 const result = yield this.userService.create(token);
-                res.cookie("token", result.token, {
-                    httpOnly: true,
+                res.cookie("jwt", result.token, {
+                    httpOnly: false,
                     maxAge: 1000 * 60 * 60 * 24,
+                    sameSite: "none",
+                    secure: true,
                 });
                 res.send({
                     status: result.status,

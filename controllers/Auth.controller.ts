@@ -4,6 +4,9 @@ import { LoginType } from "../utils/schema/auth.schema";
 
 import { InternalServerError } from "../utils/errors/InternalServerError";
 import { AuthorizationError } from "../utils/errors/AuthorizationError";
+import { AuthenticationError } from "../utils/errors/AuthenticationError";
+
+type SameSite = "strict" | "lax" | "none";
 
 export class AuthController {
   private authService: AuthService;
@@ -19,11 +22,13 @@ export class AuthController {
       console.log(result);
 
       if (result.status !== "success") {
-        res.status(400).send(result);
+        throw new AuthenticationError("Failed to authenticate the user.");
       } else {
-        res.cookie("token", result.token, {
-          httpOnly: true,
+        res.cookie("jwt", result.token, {
+          httpOnly: false,
           maxAge: 1000 * 60 * 60 * 24,
+          sameSite: "none" as SameSite,
+          secure: true,
         });
         res.status(200).send({
           status: "success",
@@ -121,9 +126,11 @@ export class AuthController {
 
       const result = await this.authService.loginGoogle(user.email);
 
-      res.cookie("token", result.payload, {
-        httpOnly: true,
+      res.cookie("jwt", result.token, {
+        httpOnly: false,
         maxAge: 1000 * 60 * 60 * 24,
+        sameSite: "none" as SameSite,
+        secure: true,
       });
       res.send({
         status: "success",

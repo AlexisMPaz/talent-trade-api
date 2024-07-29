@@ -6,6 +6,8 @@ import { Document, Types } from "mongoose";
 import { InternalServerError } from "../utils/errors/InternalServerError";
 import { BadRequestError } from "../utils/errors/BadRequestError";
 
+type SameSite = "strict" | "lax" | "none";
+
 export class UserController {
   userService: UserService;
   constructor(userService: UserService) {
@@ -30,9 +32,11 @@ export class UserController {
     try {
       const result = await this.userService.create(token);
 
-      res.cookie("token", result.token, {
-        httpOnly: true,
+      res.cookie("jwt", result.token, {
+        httpOnly: false,
         maxAge: 1000 * 60 * 60 * 24,
+        sameSite: "none" as SameSite,
+        secure: true,
       });
       res.send({
         status: result.status,
