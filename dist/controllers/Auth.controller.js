@@ -23,7 +23,7 @@ class AuthController {
                     res.status(400).send(result);
                 }
                 else {
-                    res.cookie("jwt", result.token, {
+                    res.cookie("token", result.token, {
                         httpOnly: false,
                         maxAge: 1000 * 60 * 60 * 24,
                         sameSite: "none",
@@ -118,7 +118,7 @@ class AuthController {
                     throw new AuthorizationError_1.AuthorizationError("Error with google user");
                 }
                 const result = yield this.authService.loginGoogle(user.email);
-                res.cookie("jwt", result.token, {
+                res.cookie("token", result.token, {
                     httpOnly: false,
                     maxAge: 1000 * 60 * 60 * 24,
                     sameSite: "none",
