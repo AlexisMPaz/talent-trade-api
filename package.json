@@ -7,7 +7,7 @@
     "dev": "tsnd --respawn ./index.ts",
     "dev:api": "tsnd --respawn ./index.ts --api",
     "build": "rimraf ./dist && tsc",
-    "start": "npm run build && node dist/app.js"
+    "start": "npm run build && node dist/index.js"
   },
   "keywords": [],
   "author": "",
