@@ -130,7 +130,6 @@ export class AuthService {
       return {
         status: "success",
         payload: populatedUser,
-        token: token,
       };
     } catch (error) {
       throw error;

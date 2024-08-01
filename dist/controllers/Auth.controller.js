@@ -12,7 +12,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 const InternalServerError_1 = require("../utils/errors/InternalServerError");
 const AuthorizationError_1 = require("../utils/errors/AuthorizationError");
-const AuthenticationError_1 = require("../utils/errors/AuthenticationError");
 class AuthController {
     constructor(authService) {
         this.login = (req, res, next) => __awaiter(this, void 0, void 0, function* () {
@@ -21,14 +20,12 @@ class AuthController {
                 const result = yield this.authService.login(data);
                 console.log(result);
                 if (result.status !== "success") {
-                    throw new AuthenticationError_1.AuthenticationError("Failed to authenticate the user.");
+                    res.status(400).send(result);
                 }
                 else {
-                    res.cookie("jwt", result.token, {
-                        httpOnly: false,
+                    res.cookie("token", result.token, {
+                        httpOnly: true,
                         maxAge: 1000 * 60 * 60 * 24,
-                        sameSite: "none",
-                        secure: true,
                     });
                     res.status(200).send({
                         status: "success",
@@ -119,11 +116,9 @@ class AuthController {
                     throw new AuthorizationError_1.AuthorizationError("Error with google user");
                 }
                 const result = yield this.authService.loginGoogle(user.email);
-                res.cookie("jwt", result.token, {
-                    httpOnly: false,
+                res.cookie("token", result.payload, {
+                    httpOnly: true,
                     maxAge: 1000 * 60 * 60 * 24,
-                    sameSite: "none",
-                    secure: true,
                 });
                 res.send({
                     status: "success",

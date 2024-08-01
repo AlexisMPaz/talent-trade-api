@@ -30,11 +30,9 @@ class UserController {
             const { token } = req.params;
             try {
                 const result = yield this.userService.create(token);
-                res.cookie("jwt", result.token, {
-                    httpOnly: false,
+                res.cookie("token", result.token, {
+                    httpOnly: true,
                     maxAge: 1000 * 60 * 60 * 24,
-                    sameSite: "none",
-                    secure: true,
                 });
                 res.send({
                     status: result.status,
@@ -76,13 +74,15 @@ class UserController {
             }
         });
         this.getUsers = (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+            var _a;
             const { categoryId = null } = req.params;
+            const userEmail = ((_a = req.user) === null || _a === void 0 ? void 0 : _a.email) || null;
             let page = typeof req.query.page === "string" ? req.query.page : null;
             if (page && isNaN(+page)) {
                 page = null;
             }
             try {
-                const result = yield this.userService.find(categoryId, page);
+                const result = yield this.userService.find(categoryId, page, userEmail);
                 result.status == "success"
                     ? res.send(result)
                     : res.status(500).send(result);

@@ -19,9 +19,10 @@ const AuthenticationError_1 = require("../utils/errors/AuthenticationError");
 const BadRequestError_1 = require("../utils/errors/BadRequestError");
 const AuthorizationError_1 = require("../utils/errors/AuthorizationError");
 class UserService {
-    constructor(userRepository, tradeRepository) {
+    constructor(userRepository, tradeRepository, registrationToken) {
         this.userRepository = userRepository;
         this.tradeRepository = tradeRepository;
+        this.registrationToken = registrationToken;
     }
     // ta ok.👍
     verifyEmail(user) {
@@ -31,12 +32,17 @@ class UserService {
                 if (userFound) {
                     throw new AuthorizationError_1.AuthorizationError("The email is already registered.");
                 }
+                const tokenFound = yield this.registrationToken.findByEmail(user.email);
+                if (tokenFound) {
+                    throw new AuthorizationError_1.AuthorizationError("A registration request has already been sent for this email address. Please check your email or try again later.");
+                }
                 const token = (0, jwt_config_1.generateJWTRegister)(user);
                 const data = {
                     name: user.name,
                     email: user.email,
                     token: token,
                 };
+                yield this.registrationToken.create(user.email);
                 registerEmail_1.Emails.sendConfirmationEmail(data);
                 return {
                     status: "success",
@@ -58,6 +64,7 @@ class UserService {
                 }
                 user.password = yield (0, bcrypt_config_1.hashPassword)(user.password);
                 const newUser = yield this.userRepository.create(user);
+                yield this.registrationToken.deleteByEmail(newUser.email);
                 const jwt = (0, jwt_config_1.generateJWT)({ id: newUser._id });
                 const populatedUser = yield newUser.populate([
                     {
@@ -152,7 +159,7 @@ class UserService {
         });
     }
     // ta ok.👍
-    find(categoryId, page) {
+    find(categoryId, page, userEmail) {
         return __awaiter(this, void 0, void 0, function* () {
             const options = {
                 page: page ? +page : 1,
@@ -200,11 +207,12 @@ class UserService {
             };
             let query = {};
             if (categoryId) {
-                query = {
-                    specialties: {
-                        $elemMatch: { categoryId: new mongoose_1.Types.ObjectId(categoryId) },
-                    },
+                query.specialties = {
+                    $elemMatch: { categoryId: new mongoose_1.Types.ObjectId(categoryId) },
                 };
+            }
+            if (userEmail) {
+                query.email = { $ne: userEmail };
             }
             try {
                 const users = yield this.userRepository.find(query, options);
@@ -417,31 +425,6 @@ class UserService {
             }
         });
     }
-    // async getSuggestions(user: IUser) {
-    //   const interests: specialty[] = user.interests;
-    //   const interestsIds: Types.ObjectId[] = interests.map(
-    //     (interest) => interest.specialtyId
-    //   );
-    //   const specialties: specialty[] = user.specialties;
-    //   const specialtiesIds: Types.ObjectId[] = specialties.map(
-    //     (specialty) => specialty.specialtyId
-    //   );
-    //   try {
-    //     const recommendations = await this.userRepository.findSuggestions(
-    //       interestsIds,
-    //       specialtiesIds
-    //     );
-    //     if (recommendations) {
-    //       return {
-    //         status: "success",
-    //         numberOfRecommendations: recommendations.length,
-    //         payload: recommendations,
-    //       };
-    //     }
-    //   } catch (error) {
-    //     throw error;
-    //   }
-    // }
     getSuggestions(categoryId, page, user) {
         return __awaiter(this, void 0, void 0, function* () {
             const options = {
@@ -504,6 +487,9 @@ class UserService {
             };
             if (categoryId) {
                 query.specialties.$elemMatch.categoryId = new mongoose_1.Types.ObjectId(categoryId);
+            }
+            if (user.email) {
+                query.email = { $ne: user.email };
             }
             try {
                 const users = yield this.userRepository.find(query, options);

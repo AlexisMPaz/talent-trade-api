@@ -38,23 +38,16 @@ routerSeed.get("/seed/specialties", (req, res) => __awaiter(void 0, void 0, void
 }));
 routerSeed.get("/seed/users", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        // 1) conseguir lista de especialidades, las cuales vamos a usar para agregar a cada usuario
         const specialties = yield Specialty_model_1.default.find();
-        // 2) filtrar la lista
         const specialtiesFiltered = specialties.map((specialty) => {
-            // Extrae los dos campos que nos interesan
             const { _id, categoryId } = specialty;
-            // para cada elemento, devuelve un objeto con los campos deseados
             return {
                 specialtyId: _id,
                 categoryId,
             };
         });
-        // 3) tomar los usuarios y hashear sus contraseñas
         let usersHashed = yield (0, users_1.hashAllPasswords)(users_1.users);
-        // 4) agregar especialidades a cada usuario
         usersHashed = (0, users_1.assignSpecialtiesAndInterests)(usersHashed, specialtiesFiltered);
-        // 5) después de haber agregado las especialidades, se añaden a la base de datos
         const user = yield User_model_1.default.create(usersHashed);
         res.status(201).json({
             status: "success",

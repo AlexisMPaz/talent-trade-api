@@ -1,6 +1,8 @@
 import { Types } from "mongoose";
 import { enumType, IUser, specialty } from "../models/User.model";
 import { UserRepository } from "../repositories/User.repository";
+import { TradeRepository } from "../repositories/Trade.repository";
+import { RegistrationTokenRepository } from "../repositories/RegistrationToken";
 import { hashPassword } from "../utils/bcrypt/bcrypt.config";
 import { RegisterType } from "../utils/schema/auth.schema";
 import {
@@ -12,11 +14,8 @@ import {
 } from "../utils/jwt/jwt.config";
 import { Emails } from "../email/registerEmail";
 import { UserUpdateType } from "../utils/schema/user.schema";
-import { TradeService } from "./Trade.service";
-import { TradeRepository } from "../repositories/Trade.repository";
 import { UploadApiResponse } from "cloudinary";
 import { cloudinary } from "../config/cloudinary/cloudinary.config";
-import { populate } from "dotenv";
 
 import { AuthenticationError } from "../utils/errors/AuthenticationError";
 import { BadRequestError } from "../utils/errors/BadRequestError";
@@ -78,13 +77,16 @@ type userRating = {
 export class UserService {
   userRepository: UserRepository;
   tradeRepository: TradeRepository;
+  registrationToken: RegistrationTokenRepository;
 
   constructor(
     userRepository: UserRepository,
-    tradeRepository: TradeRepository
+    tradeRepository: TradeRepository,
+    registrationToken: RegistrationTokenRepository
   ) {
     this.userRepository = userRepository;
     this.tradeRepository = tradeRepository;
+    this.registrationToken = registrationToken;
   }
 
   // ta ok.👍
@@ -94,12 +96,23 @@ export class UserService {
       if (userFound) {
         throw new AuthorizationError("The email is already registered.");
       }
+
+      const tokenFound = await this.registrationToken.findByEmail(user.email);
+      if (tokenFound) {
+        throw new AuthorizationError(
+          "A registration request has already been sent for this email address. Please check your email or try again later."
+        );
+      }
+
       const token = generateJWTRegister(user);
       const data = {
         name: user.name,
         email: user.email,
         token: token,
       };
+
+      await this.registrationToken.create(user.email);
+
       Emails.sendConfirmationEmail(data);
 
       return {
@@ -121,6 +134,8 @@ export class UserService {
       }
       user.password = await hashPassword(user.password);
       const newUser = await this.userRepository.create(user);
+
+      await this.registrationToken.deleteByEmail(newUser.email);
 
       const jwt = generateJWT({ id: newUser._id });
 
@@ -226,7 +241,11 @@ export class UserService {
   }
 
   // ta ok.👍
-  async find(categoryId: string | null, page: string | null) {
+  async find(
+    categoryId: string | null,
+    page: string | null,
+    userEmail: string | null
+  ) {
     const options = {
       page: page ? +page : 1,
       limit: 10,
@@ -271,13 +290,14 @@ export class UserService {
         },
       ],
     };
-    let query = {};
+    let query: any = {};
     if (categoryId) {
-      query = {
-        specialties: {
-          $elemMatch: { categoryId: new Types.ObjectId(categoryId) },
-        },
+      query.specialties = {
+        $elemMatch: { categoryId: new Types.ObjectId(categoryId) },
       };
+    }
+    if (userEmail) {
+      query.email = { $ne: userEmail };
     }
     try {
       const users = await this.userRepository.find(query, options);
@@ -348,8 +368,6 @@ export class UserService {
       if (!userFind) {
         throw new AuthenticationError("The email is not registered.");
       }
-
-      
 
       let userFilterData: userFilterDataType = {
         name: userFind.name,
@@ -507,34 +525,6 @@ export class UserService {
     }
   }
 
-  // async getSuggestions(user: IUser) {
-  //   const interests: specialty[] = user.interests;
-  //   const interestsIds: Types.ObjectId[] = interests.map(
-  //     (interest) => interest.specialtyId
-  //   );
-
-  //   const specialties: specialty[] = user.specialties;
-  //   const specialtiesIds: Types.ObjectId[] = specialties.map(
-  //     (specialty) => specialty.specialtyId
-  //   );
-
-  //   try {
-  //     const recommendations = await this.userRepository.findSuggestions(
-  //       interestsIds,
-  //       specialtiesIds
-  //     );
-  //     if (recommendations) {
-  //       return {
-  //         status: "success",
-  //         numberOfRecommendations: recommendations.length,
-  //         payload: recommendations,
-  //       };
-  //     }
-  //   } catch (error) {
-  //     throw error;
-  //   }
-  // }
-
   async getSuggestions(
     categoryId: string | null,
     page: string | null,
@@ -608,6 +598,11 @@ export class UserService {
     if (categoryId) {
       query.specialties.$elemMatch.categoryId = new Types.ObjectId(categoryId);
     }
+
+    if (user.email) {
+      query.email = { $ne: user.email };
+    }
+
     try {
       const users = await this.userRepository.find(query, options);
       return {

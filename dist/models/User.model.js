@@ -61,7 +61,7 @@ const UserSchema = new mongoose_1.Schema({
     },
     avatar: {
         type: String,
-        default: "/avatar.jpeg",
+        default: "/avatar/default.webp",
     },
     banner: {
         type: String,
