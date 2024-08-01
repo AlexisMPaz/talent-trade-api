@@ -113,7 +113,7 @@ export class UserService {
 
       await this.registrationToken.create(user.email);
 
-      Emails.sendConfirmationEmail(data);
+      await Emails.sendConfirmationEmail(data);
 
       return {
         status: "success",
@@ -204,7 +204,7 @@ export class UserService {
         email: userFound.email,
         token: token,
       };
-      Emails.sendResetPasswordEmail(data);
+      await Emails.sendResetPasswordEmail(data);
 
       return {
         status: "success",

@@ -43,7 +43,7 @@ class UserService {
                     token: token,
                 };
                 yield this.registrationToken.create(user.email);
-                registerEmail_1.Emails.sendConfirmationEmail(data);
+                yield registerEmail_1.Emails.sendConfirmationEmail(data);
                 return {
                     status: "success",
                     payload: "Para terminar tu registro verifica tu email.",
@@ -129,7 +129,7 @@ class UserService {
                     email: userFound.email,
                     token: token,
                 };
-                registerEmail_1.Emails.sendResetPasswordEmail(data);
+                yield registerEmail_1.Emails.sendResetPasswordEmail(data);
                 return {
                     status: "success",
                     payload: "Para continuar el reset verifica tu email.",
