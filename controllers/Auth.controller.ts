@@ -45,9 +45,7 @@ export class AuthController {
   logout = async (req: Request, res: Response, next: NextFunction) => {
     try {
       res.clearCookie("token", {
-        httpOnly: false,
-        sameSite: "none",
-        secure: true,
+        domain: "talent-trade-api.vercel.app",
         path: "/",
       });
       res.status(200).send({

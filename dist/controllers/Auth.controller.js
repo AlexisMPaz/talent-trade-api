@@ -44,9 +44,7 @@ class AuthController {
         this.logout = (req, res, next) => __awaiter(this, void 0, void 0, function* () {
             try {
                 res.clearCookie("token", {
-                    httpOnly: false,
-                    sameSite: "none",
-                    secure: true,
+                    domain: "talent-trade-api.vercel.app",
                     path: "/",
                 });
                 res.status(200).send({
