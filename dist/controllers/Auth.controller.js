@@ -26,6 +26,7 @@ class AuthController {
                     res.cookie("token", result.token, {
                         httpOnly: false,
                         maxAge: 1000 * 60 * 60 * 24,
+                        sameSite: "none",
                         secure: true,
                     });
                     res.status(200).send({
