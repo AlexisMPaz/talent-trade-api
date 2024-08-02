@@ -27,6 +27,7 @@ export class AuthController {
           httpOnly: false,
           maxAge: 1000 * 60 * 60 * 24,
           sameSite: "none" as SameSite,
+          secure: true,
         });
         res.status(200).send({
           status: "success",
@@ -128,6 +129,7 @@ export class AuthController {
         httpOnly: false,
         maxAge: 1000 * 60 * 60 * 24,
         sameSite: "none" as SameSite,
+        secure: true,
       });
       res.send({
         status: "success",
