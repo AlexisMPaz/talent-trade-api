@@ -44,7 +44,11 @@ class AuthController {
         });
         this.logout = (req, res, next) => __awaiter(this, void 0, void 0, function* () {
             try {
-                res.clearCookie("token");
+                res.clearCookie("token", {
+                    httpOnly: false,
+                    sameSite: "none",
+                    secure: true,
+                });
                 res.status(200).send({
                     status: "success",
                     payload: "Logout success.",
