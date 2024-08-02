@@ -28,6 +28,8 @@ export class AuthController {
           maxAge: 1000 * 60 * 60 * 24,
           sameSite: "none" as SameSite,
           secure: true,
+          path: "/",
+          domain: "talent-trade.vercel.app",
         });
         res.status(200).send({
           status: "success",
@@ -47,8 +49,10 @@ export class AuthController {
     try {
       res.clearCookie("token", {
         httpOnly: false,
-        sameSite: "none" as SameSite,
+        sameSite: "none",
         secure: true,
+        path: "/",
+        domain: "talent-trade.vercel.app",
       });
       res.status(200).send({
         status: "success",

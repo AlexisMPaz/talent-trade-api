@@ -28,6 +28,8 @@ class AuthController {
                         maxAge: 1000 * 60 * 60 * 24,
                         sameSite: "none",
                         secure: true,
+                        path: "/",
+                        domain: "talent-trade.vercel.app",
                     });
                     res.status(200).send({
                         status: "success",
@@ -48,6 +50,8 @@ class AuthController {
                     httpOnly: false,
                     sameSite: "none",
                     secure: true,
+                    path: "/",
+                    domain: "talent-trade.vercel.app",
                 });
                 res.status(200).send({
                     status: "success",
